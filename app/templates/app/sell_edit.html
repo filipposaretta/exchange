@@ -1,0 +1,17 @@
+{% extends 'app/base.html' %}
+
+{% block content %}
+    {% if wallet %}
+        <div class="box">
+            <h4>Wallet</h4>
+            <p>Bitcoin: {{ bit_user }} B</p>
+            <p>Dollars: {{ dol_user }} $</p>
+        </div>
+    {% endif %}
+    <h2>Nuova vendita</h2>
+    <form method="POST" class="post-form">{% csrf_token %}
+         {{ trans.as_p }}
+         <button type="submit" class="save btn btn-default">Salva</button>
+     </form>
+
+{% endblock %}

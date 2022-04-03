@@ -1,0 +1,36 @@
+{% extends 'app/base.html' %}
+
+{% block content %}
+    {% if transs.wallet %}
+        <div class="box">
+            <h4>Wallet</h4>
+            <p>Bitcoin: {{ transs.bit_user }} B</p>
+            <p>Dollars: {{ transs.dol_user }} $</p>
+        </div>
+    {% endif %}
+    <a href="{% url 'transaction_new' %}">
+        <button type="button" class="btn btn-outline-primary btn-lg">
+            <h4>Nuova transazione</h4>
+        </button>
+    </a>
+    {% for trans in transs %}
+        <article class="trans">
+            <time class="date">
+                {{ trans.published_date }}
+            </time>
+            {% if trans.ended %}
+                {% if trans.buy_in > 0 %}
+                    <a href="{% url 'transaction_detail' pk=trans.pk %}"><font color="red" size="5px">CONCLUSO: Acquisto di {{ trans.buy_in }}B a {{ trans.one_B_dollar }}$/B. Ha vinto {{ trans.winner }}</font></a>
+                {% else %}
+                    <a href="{% url 'transaction_detail' pk=trans.pk %}"><font color="red" size="5px">CONCLUSO: Vendita di {{ trans.sell_in }}B a {{ trans.one_B_dollar }}$/B. Ha vinto {{ trans.winner }}</font></a>
+                {% endif %}
+            {% else %}
+                {% if trans.sell_in > 0 %}
+                    <a href="{% url 'transaction_detail' pk=trans.pk %}"><font color="green" size="5px">Vendita di {{ trans.sell }}B a {{ trans.one_B_dollar }}$/B </font></a>
+                {% else %}
+                    <a href="{% url 'transaction_detail' pk=trans.pk %}"><font color="blue" size="5px">Acquisto di {{ trans.buy }}B a {{ trans.one_B_dollar }}$/B </font></a>
+                {% endif %}
+            {% endif %}
+        </article>
+    {% endfor %}
+{% endblock %}

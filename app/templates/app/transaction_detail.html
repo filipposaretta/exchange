@@ -1,0 +1,57 @@
+{% extends 'app/base.html' %}
+
+{% block content %}
+    {% if trans.wallet %}
+        <div class="box">
+            <h4>Wallet</h4>
+            <p>Bitcoin: {{ trans.bit_user }} B</p>
+            <p>Dollars: {{ trans.dol_user }} $</p>
+        </div>
+    {% endif %}
+    <div class="row">
+        <aside class="actions">
+            {% if user.is_authenticated %}
+                <a class="btn btn-default" href="{% url 'transaction_remove' pk=trans.pk %}"><span class="glyphicon glyphicon-remove"></span>
+                    {% include './icons/trash.svg' %}
+                </a>
+            {% endif %}
+        </aside>
+        <div class="col-lg-10 col-md-6 col-sm-6">
+            <h4>Dettagli</h4>
+            <hr>
+            {% if trans.ended %}
+                <p><font color="#4169E1">Username: </font>{{ trans.creator }}</p>
+
+                <p><font color="#4169E1">Valore di 1 Bitcoin: </font>{{ trans.one_B_dollar }} $</p>
+
+                <p><font color="red">Il match è con: </font>{{ trans.winner }}</p>
+                <p><font color="red">1 Bitcoin è stato venduto a: </font>{{ trans.price_1B_sell }} $</p>
+                <p><font color="red">Quantità di Bitcoin scambiati: </font>{{ trans.quantity_B_sell }} $</p>
+                <p><font color="#4169E1">La transazione è conclusa</font></p>
+
+            {% else %}
+                <p><font color="#4169E1">Username: </font>{{ trans.creator }}</p>
+
+                {% if trans.buy > 0 %}
+                    <p><font color="#4169E1">Bitcoin da acquistare: </font>{{ trans.buy }}</p>
+                {% elif trans.sell > 0 %}
+                    <p><font color="#4169E1">Bitcoin in vendita: </font>{{ trans.sell }}</p>
+                {% endif %}
+
+                <p><font color="#4169E1">Valore di 1 Bitcoin: </font>{{ trans.one_B_dollar }} $</p>
+
+                <p><font color="#4169E1">La transazione non è conclusa</font></p>
+            {% endif %}
+            <time class="date">
+                {{ trans.published_date }}
+            </time>
+        </div>
+    </div>
+    </div>
+    <div class="col-lg-6 col-md-6 col-sm-6">
+        <h4>Link relativi</h4>
+        <p>
+            <a href="{% url 'logout' %}" class="right-menu">Logout</a> <br>
+        </p>
+    </div>
+{% endblock %}

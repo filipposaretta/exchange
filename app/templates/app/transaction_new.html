@@ -1,0 +1,21 @@
+{% extends 'app/base.html' %}
+
+{% block content %}
+    {% if wallet %}
+        <div class="box">
+            <h4>Wallet</h4>
+            <p>Bitcoin: {{ bit_user }} B</p>
+            <p>Dollars: {{ dol_user }} $</p>
+        </div>
+    {% endif %}
+    <a href="{% url 'buy_new' %}">
+        <button type="button" class="btn btn-outline-primary btn-lg">
+            <h4>Acquista</h4>
+        </button>
+    </a>
+    <a href="{% url 'sell_new' %}">
+        <button type="button" class="btn btn-outline-primary btn-lg">
+            <h4>Vendi</h4>
+        </button>
+    </a>
+{% endblock %}

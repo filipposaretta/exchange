@@ -1,0 +1,37 @@
+{% extends 'app/base.html' %}
+
+{% block content %}
+    {% if user.wallet %}
+        <div class="box">
+            <h4>Wallet</h4>
+            <p>Bitcoin: {{ user.bit_user }} B</p>
+            <p>Dollars: {{ user.dol_user }} $</p>
+        </div>
+    {% endif %}
+    <div class="row">
+        <div class="col-lg-6 col-md-6 col-sm-6">
+            <h4>Dettagli dell'account</h4>
+            <hr>
+            <p><font color="#4169E1">Username: </font>{{ request.user.username }}</p>
+
+            <p><font color="#4169E1">Data di iscrizione: </font>{{ request.user.date_joined }}</p>
+
+            <p><font color="#4169E1">Ultimo Login: </font>{{ request.user.last_login }}</p>
+        </div>
+
+        <div class="col-lg-6 col-md-6 col-sm-6">
+            <h4>Link relativi</h4>
+            <p>
+                <a href="{% url 'logout' %}" class="right-menu">Logout</a> <br>
+            </p>
+            <p>
+                <a href="{% url 'wallet' %}" class="right-menu">Wallet</a> <br>
+            </p>
+            <p>
+                <a href="{% url 'transaction_list' %}" class="right-menu">Transazioni</a> <br>
+            </p>
+        </div>
+
+    </div>
+
+{% endblock %}

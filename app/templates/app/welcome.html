@@ -1,0 +1,63 @@
+{% extends 'app/base.html' %}
+
+{% block content %}
+
+    <div class="row">
+        <div class="col-lg-10 col-md-6 col-sm-6">
+            <h1>Ehi, benvenuta/o in Bitcoin exchange!</h1>
+            <hr>
+            <p>Se vuoi scoprire di più su come funziona la piattaforma, leggi qui sotto...
+             altrimenti, se non lo hai già fatto, procedi con il <a href="{% url 'login' %}">Login</a> per entrare ufficialmente
+             in Bitcoin exchange!</p>
+            <h4>Come funziona la piattaforma?</h4>
+            <br>
+            <h3>Wallet</h3>
+            <p>La prima volta che farai clic sul <a href="{% url 'wallet' %}">Wallet</a> {% include './icons/wallet.svg' %} ti verrà creato
+                automaticamente un Wallet, che conterrà un numero random di Bitcoin: 1-10 B e un numero random
+                di Dollari: meno di 150'000 $.</p>
+            <p>Dalla volta successiva potrai costantemente visionare il tuo budget sia di Bitcoin che di Dollari!
+            Inoltre sarà sempre visibile un comodo box per tenere sempre sotto controllo le tue finanze.</p>
+            <br>
+            <h3>Come creare una nuova transazione?</h3>
+            <p>Per crearla basta che clicchi sul pulsante "Nuova Transazione" presente nelle due pagine relative alle
+                transazioni. Da qui potrai scegliere se compiere un acquisto o una vendita e in automatico verrai
+                inviato al form per creare una transazione.</p>
+            <font color="red"><b>ATTENZIONE! Prima di creare la tua prima transazione assicurati di aver creato il Wallet.
+            Se crei una transazione senza il Wallet verrai reindirizzato in automatico alla creazione del Wallet, ma non
+                sarà salvata la transazione! (Giustamente, senza Wallet, come fai a sapere se puoi vendere o comprare?)</b></font>
+            <br>
+            <br>
+            <h3>Transazioni</h3>
+            <p>Sulla pagina delle <a href="{% url 'transaction_list' %}">Transazioni</a> potrai scoprire tutte
+                le transazioni che sono state create storicamente. Quindi troverai gli acquisti e le vendite sia
+                attive, che concluse.</p>
+            <br>
+            <p>All'interno di ogni transazione potrai scoprirne tutti i dettagli, tra cui se è acquisto o vendita,
+                quanti Bitcoin e Dollari sono interessati, chi ha fatto la transazione e se questa è conclusa o meno.
+            </p>
+            <br>
+            <h3>Come concludere o cancellare una transazione?</h3>
+            <p>Il creatore ha 2 opzioni:</p>
+            <ul>
+                <li>Concluderla</li>
+                <p>Se c'è un vincitore acquirente o venditore, il sistema concluderà automaticamente la vendita assegnando
+                i soldi ai vincitori.</p>
+                <li>Cancellarla</li>
+                <p>Per cancellarla si clicca sull'icona {% include './icons/trash.svg' %} e in automatico verrà cancellata
+                solo quella transazione.</p>
+            </ul>
+            <br>
+            <h3>Transazioni attive</h3>
+            <p>Per vedere la lista delle transazioni attive, cliccare su <a href="{% url 'transaction_active_list' %}">Transazioni attive</a>.
+                Qui scoprirai quali sono le transazioni che ancora non sono state concluse,e per cui puoi ancora intervenire
+                per vincere un acquisto o una vendita.
+            </p>
+            <br>
+            <h3>Bilancio</h3>
+            <p>Sul <a href="{% url 'earn_lose' %}" >Bilancio</a> puoi vedere le tue transazioni concluse, con tanto di bilancio finale che ti dice il totale di
+                Bitcoin o Dollari guadagnati o persi.</p>
+            <br>
+        </div>
+    </div>
+
+{% endblock %}

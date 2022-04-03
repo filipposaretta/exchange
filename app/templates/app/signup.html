@@ -1,0 +1,30 @@
+{% extends "app/base.html"  %}
+
+{% block content %}
+
+    <div class="row">
+        <div class="col-lg-6 col-md-6 col-sm-6">
+            <h4>Iscrizione</h4>
+
+            <form method="POST">
+                {% csrf_token %}
+                <table class="table">
+                    {{ form.as_table }}
+                    <tr>
+                        <td></td>
+                        <td><button type="submit" class="btn btn-primary">Salva</button></td>
+                    </tr>
+                </table>
+            </form>
+        </div>
+
+        <div class="col-lg-6 col-md-6 col-sm-6">
+            <h4>Link relativi</h4>
+            <p>
+                <a href="{% url 'login' %}" class="right-menu">Login</a> <br>
+            </p>
+        </div>
+
+    </div>
+
+{% endblock %}

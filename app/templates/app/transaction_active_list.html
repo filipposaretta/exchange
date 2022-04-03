@@ -1,0 +1,28 @@
+{% extends 'app/base.html' %}
+
+{% block content %}
+    {% if transs.wallet %}
+        <div class="box">
+            <h4>Wallet</h4>
+            <p>Bitcoin: {{ transs.bit_user }} B</p>
+            <p>Dollars: {{ transs.dol_user }} $</p>
+        </div>
+    {% endif %}
+    <a href="{% url 'transaction_new' %}">
+        <button type="button" class="btn btn-outline-primary btn-lg">
+            <h4>Nuova transazione</h4>
+        </button>
+    </a>
+    {% for trans in transs %}
+        <article class="trans">
+            <time class="date">
+                {{ trans.published_date }}
+            </time>
+            {% if trans.sell > 0 %}
+                <h2><a href="{% url 'transaction_detail' pk=trans.pk %}"><font color="green">Vendita di {{ trans.sell }} B a {{ trans.one_B_dollar }} $</font></a></h2>
+            {% elif trans.buy > 0 %}
+                <h2><a href="{% url 'transaction_detail' pk=trans.pk %}"><font color="blue">Acquisto di {{ trans.buy }} B a {{ trans.one_B_dollar }} $</font></a></h2>
+            {% endif %}
+        </article>
+    {% endfor %}
+{% endblock %}

@@ -1,0 +1,102 @@
+.page-header {
+    background-color: #000000;
+    margin-top: 0;
+    margin-bottom: 40px;
+    padding: 20px 20px 20px 40px;
+}
+
+.page-header h1,
+.page-header h1 a,
+.page-header h1 a:visited,
+.page-header h1 a:active {
+    color: #ffffff;
+    font-size: 36pt;
+    text-decoration: none;
+}
+
+h1,
+h2,
+h3,
+h4 {
+    font-family: 'Roboto';
+}
+
+.date {
+    color: #828282;
+}
+
+.save {
+    float: right;
+}
+
+.trans-form textarea,
+.trans-form input {
+    width: 100%;
+}
+
+.top-menu,
+.top-menu:hover,
+.top-menu:visited {
+    color: #ffffff;
+    float: right;
+    font-size: 26pt;
+    margin-right: 20px;
+}
+
+.trans {
+    margin-bottom: 70px;
+}
+
+.trans h2 a,
+.trans h2 a:visited {
+    color: #000000;
+}
+
+.trans > .date,
+.trans > .actions {
+    float: right;
+}
+
+.btn-default,
+.btn-default:visited {
+    color: #000000;
+    background: none;
+    border-color: #000000;
+}
+
+.btn-default:hover {
+    color: #7CFC00;
+    background-color: #FFD700;
+}
+
+.left-menu {
+    color: #00FF7F;
+    font-size: 15pt;
+    margin-left: 15px;
+}
+
+.right-menu {
+    color: #FF0000;
+    font-size: 15pt;
+    margin-right: 30px;
+}
+
+.box {
+    background-color: #FFFFFF;
+    color: #4169E1;
+    height: 130px;
+    width: 280px;
+    padding: 5px;
+    border: solid 3px black;
+    margin: -150px;
+    position: absolute;
+    left: 800px;
+}
+
+.redtext {
+    color: red;
+}
+
+.greentext {
+    color: green;
+}
