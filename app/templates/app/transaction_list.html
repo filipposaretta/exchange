@@ -3,9 +3,9 @@
 {% block content %}
     {% if transs.wallet %}
         <div class="box">
-            <h4>Wallet</h4>
-            <p>Bitcoin: {{ transs.bit_user }} B</p>
-            <p>Dollars: {{ transs.dol_user }} $</p>
+            <h4><center><font color="black">Wallet</font></center></h4>
+            <p><font color="black">Bitcoin:</font> <font color="blue">{{ transs.bit_user }} B</font></p>
+            <p><font color="black">Dollari:</font> <font color="blue">{{ transs.dol_user }} $</font></p>
         </div>
     {% endif %}
     <a href="{% url 'transaction_new' %}">
@@ -20,15 +20,15 @@
             </time>
             {% if trans.ended %}
                 {% if trans.buy_in > 0 %}
-                    <a href="{% url 'transaction_detail' pk=trans.pk %}"><font color="red" size="5px">CONCLUSO: Acquisto di {{ trans.buy_in }}B a {{ trans.one_B_dollar }}$/B. Ha vinto {{ trans.winner }}</font></a>
+                    <a href="{% url 'transaction_detail' pk=trans.pk %}"><font color="red" size="5px">CONCLUSO: Acquisto di {{ trans.buy_in }}B a {{ trans.price_1B_in }}$/B. Ha vinto {{ trans.winner }}</font></a>
                 {% else %}
-                    <a href="{% url 'transaction_detail' pk=trans.pk %}"><font color="red" size="5px">CONCLUSO: Vendita di {{ trans.sell_in }}B a {{ trans.one_B_dollar }}$/B. Ha vinto {{ trans.winner }}</font></a>
+                    <a href="{% url 'transaction_detail' pk=trans.pk %}"><font color="red" size="5px">CONCLUSO: Vendita di {{ trans.sell_in }}B a {{ trans.price_1B_in }}$/B. Ha vinto {{ trans.winner }}</font></a>
                 {% endif %}
             {% else %}
                 {% if trans.sell_in > 0 %}
-                    <a href="{% url 'transaction_detail' pk=trans.pk %}"><font color="green" size="5px">Vendita di {{ trans.sell }}B a {{ trans.one_B_dollar }}$/B </font></a>
+                    <a href="{% url 'transaction_detail' pk=trans.pk %}"><font color="green" size="5px">{{ trans.creator }} : Vendita di {{ trans.sell }}B a {{ trans.price_1B_in }}$/B </font></a>
                 {% else %}
-                    <a href="{% url 'transaction_detail' pk=trans.pk %}"><font color="blue" size="5px">Acquisto di {{ trans.buy }}B a {{ trans.one_B_dollar }}$/B </font></a>
+                    <a href="{% url 'transaction_detail' pk=trans.pk %}"><font color="blue" size="5px">{{ trans.creator }} : Acquisto di {{ trans.buy }}B a {{ trans.price_1B_in }}$/B </font></a>
                 {% endif %}
             {% endif %}
         </article>

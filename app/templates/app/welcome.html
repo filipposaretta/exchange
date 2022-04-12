@@ -46,6 +46,12 @@
                 <p>Per cancellarla si clicca sull'icona {% include './icons/trash.svg' %} e in automatico verrà cancellata
                 solo quella transazione.</p>
             </ul>
+
+            <font color="red"><b>ATTENZIONE! Non è ammesso il self-matching, quindi chi compra e vende devono essere
+            due utenti diversi.\n
+            Inoltre non è ammesso vendere un numero di Bitcoin totali superiori a quello che si possiede. Al contrario,
+            non è possibile comprare per un numero di Dollari totali superiori a quello che si possiede.</b></font>
+            <br>
             <br>
             <h3>Transazioni attive</h3>
             <p>Per vedere la lista delle transazioni attive, cliccare su <a href="{% url 'transaction_active_list' %}">Transazioni attive</a>.

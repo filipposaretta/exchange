@@ -2,9 +2,9 @@
 
 {% block content %}
     <div class="box">
-        <h4>Wallet</h4>
-        <p>Bitcoin: {{ transs.bit_fin }} B</p>
-        <p>Dollars: {{ transs.dol_fin }} $</p>
+        <h4><center><font color="black">Wallet</font></center></h4>
+        <p><font color="black">Bitcoin:</font> <font color="blue">{{ transs.bit_fin }} B</font></p>
+        <p><font color="black">Dollari:</font> <font color="blue">{{ transs.dol_fin }} $</font></p>
     </div>
     {% for trans in transs %}
         <article class="trans">
@@ -13,15 +13,15 @@
             </time>
             {% if trans.buy_in > 0 %}
                 {% if trans.creator == request.user.username %}
-            <h2><a href="{% url 'transaction_detail' pk=trans.pk %}"><font color="green">+ {{ trans.quantity_B_sell }} Bitcoin </font><font color="red">    - {{ trans.total_dollars_sell }} $</font></a></h2>
+                    <h2><a href="{% url 'transaction_detail' pk=trans.pk %}"><font color="black">{{ trans.creator }} : </font><font color="green">+ {{ trans.total_B_exchanged }} Bitcoin </font><font color="red">    - {{ trans.total_price }} $</font></a></h2>
                 {% else %}
-                    <h2><a href="{% url 'transaction_detail' pk=trans.pk %}"><font color="red">- {{ trans.quantity_B_sell }} Bitcoin </font><font color="green">   + {{ trans.total_dollars_sell }} $</font></a></h2>
+                    <h2><a href="{% url 'transaction_detail' pk=trans.pk %}"><font color="black">{{ trans.creator }} : </font><font color="red">- {{ trans.total_B_exchanged }} Bitcoin </font><font color="green">   + {{ trans.total_price }} $</font></a></h2>
                 {% endif %}
             {% elif trans.sell_in > 0 %}
                 {% if trans.creator == request.user.username %}
-                    <h2><a href="{% url 'transaction_detail' pk=trans.pk %}"><font color="red">- {{ trans.quantity_B_sell }} Bitcoin </font><font color="green">   + {{ trans.total_dollars_sell }} $</font></a></h2>
+                    <h2><a href="{% url 'transaction_detail' pk=trans.pk %}"><font color="black">{{ trans.creator }} : </font><font color="red">- {{ trans.total_B_exchanged }} Bitcoin </font><font color="green">   + {{ trans.total_price }} $</font></a></h2>
                 {% else %}
-                    <h2><a href="{% url 'transaction_detail' pk=trans.pk %}"><font color="green">+ {{ trans.quantity_B_sell }} Bitcoin </font><font color="red">   - {{ trans.total_dollars_sell }} $</font></a></h2>
+                    <h2><a href="{% url 'transaction_detail' pk=trans.pk %}"><font color="black">{{ trans.creator }} : </font><font color="green">+ {{ trans.total_B_exchanged }} Bitcoin </font><font color="red">   - {{ trans.total_price }} $</font></a></h2>
                 {% endif %}
             {% endif %}
         </article>

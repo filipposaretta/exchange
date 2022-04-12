@@ -66,15 +66,19 @@ def signup(request):
 @login_required
 def wallet(request):
     user = get_object_or_404(User, id=request.user.id)
+
+    # arrotonda sempre di 2 cifre decimali
     try:
-        user.bitcoin = Wallet.objects.get(username=request.user.username).bitcoin
-        user.dollars = Wallet.objects.get(username=request.user.username).dollars
+        user.bitcoin = round(Wallet.objects.get(username=request.user.username).bitcoin, 2)
+        user.dollars = round(Wallet.objects.get(username=request.user.username).dollars, 2)
         return render(request, 'app/wallet.html', {'user': user})
+
+    #se non esiste crealo tu
     except Wallet.DoesNotExist:  # new user
-        user.bitcoin = random.random() * 10
+        user.bitcoin = round(random.random() * 10, 2)
         while user.bitcoin < 1:
-            user.bitcoin = random.random() * 10
-        user.dollars = random.random() * 150000
+            user.bitcoin = round(random.random() * 10, 2)
+        user.dollars = round(random.random() * 150000, 2)
         user.save()
         Wallet.objects.create(username=user.username, bitcoin=user.bitcoin, dollars=user.dollars,
                               dollars_init=user.dollars, bitcoin_init=user.bitcoin)
@@ -82,7 +86,7 @@ def wallet(request):
 
 
 @login_required
-def buy_new(request):
+def buy_new(request):   # nuovo acquisto
     if request.method == "POST":
         form = Buy(request.POST)
         if form.is_valid():
@@ -92,103 +96,120 @@ def buy_new(request):
             trans_buyer.sell_in = trans_buyer.sell
             trans_seller = ""
             try:
-                dollars_B = Wallet.objects.get(username=trans_buyer.creator).dollars
-                trans_buyer.dollars_trans = trans_buyer.one_B_dollar * trans_buyer.buy  # is a check for the positivity of values
+                dollars_buyer = Wallet.objects.get(username=trans_buyer.creator).dollars  # $ del buyer
+                trans_buyer.dollars_trans = trans_buyer.price_1B_in * trans_buyer.buy  # voglio solo valori positivi
 
-                if 0 < trans_buyer.dollars_trans < dollars_B:  # if I have a good tran
-                    Trans.objects.create(creator=trans_buyer.creator, published_date=timezone.now(), good=True,
-                                         buy=trans_buyer.buy, sell=0, buy_in=trans_buyer.buy_in, sell_in=0,
-                                         one_B_dollar=trans_buyer.one_B_dollar)
+                # cerco se il BUYER ha disponibilità economica
+                total_trans_buy = Trans.objects.all().filter(ended=False, good=True, sell=0, creator=trans_buyer.creator)
 
-                    trans_buyer.id_buyer = Trans.objects.latest('published_date')._id
+                dollari_totali_in_acquisto = trans_buyer.dollars_trans
+                for i in total_trans_buy:
+                    dollari_totali_in_acquisto += Trans.objects.get(_id=i._id).buy
 
-                    tmp_one_bit_dollars = trans_buyer.one_B_dollar  # value of 1 bitcoin BUYER
-                    tmp_one_bit_dollars_seller = 0
-                    quantity = 0
-                    seller = ""  # tmp winner SELLER
-                    id_seller = 0
+                if dollari_totali_in_acquisto <= dollars_buyer:
+                    if 0 < trans_buyer.dollars_trans < dollars_buyer:  # se è buona
+                        Trans.objects.create(creator=trans_buyer.creator, published_date=timezone.now(), good=True,
+                                             buy=round(trans_buyer.buy, 2), sell=0.0, buy_in=round(trans_buyer.buy_in, 2), sell_in=0.0,
+                                             price_1B_in=round(trans_buyer.price_1B_in, 2))
 
-                    total_trans = Trans.objects.all().filter(ended=False, good=True, buy=0).exclude(
-                        creator=trans_buyer.creator)
+                        trans_buyer.id_buyer = Trans.objects.latest('published_date')._id
 
-                    for k in total_trans:  # for each transaction we look for the SELLER
-                        trans_seller_tmp = Trans.objects.get(_id=k._id)
-                        if tmp_one_bit_dollars >= trans_seller_tmp.one_B_dollar > tmp_one_bit_dollars_seller:  # a good seller
-                            trans_seller = trans_seller_tmp
-                            tmp_one_bit_dollars_seller = trans_seller.one_B_dollar
-                            seller = trans_seller.creator
-                            id_seller = trans_seller._id
-                            if trans_seller.sell >= trans_buyer.buy:  # match completo
-                                quantity = trans_buyer.buy
-                            else:  # match parziale
-                                quantity = trans_seller.sell
+                        #   inizializzo le variabili
+                        tmp_price_1b = trans_buyer.price_1B_in  # valore di 1B BUYER
+                        tmp_price_1b_seller = 0
+                        quantity = 0
+                        seller = ""  # tmp winner SELLER
+                        id_seller = 0
 
-                    if seller != "":  # if there is a winner, winner = seller
-                        trans_buyer.winner = seller
-                        trans_buyer.price_1B_sell = tmp_one_bit_dollars
-                        trans_buyer.quantity_B_sell = quantity
-                        bitcoin_rimasti_seller = trans_seller.sell - quantity
-                        bitcoin_rimasti_buyer = trans_buyer.buy - quantity  # buyer
+                        #   cerco le non self transactions
+                        total_trans = Trans.objects.all().filter(ended=False, good=True, buy=0).exclude(
+                            creator=trans_buyer.creator)
 
-                        # SELLER
-                        if bitcoin_rimasti_seller <= 0:  # complete seller
-                            Trans.objects.filter(_id=id_seller).update(
-                                ended=True,
-                                total_dollars_sell=tmp_one_bit_dollars * quantity,
-                                winner=trans_buyer.creator,
-                                price_1B_sell=tmp_one_bit_dollars,
-                                quantity_B_sell=quantity,
-                                sell=0)
+                        for k in total_trans:  # cerco il SELLER
+                            trans_seller_tmp = Trans.objects.get(_id=k._id)
 
-                        elif bitcoin_rimasti_seller > 0:  # partial
-                            Trans.objects.filter(_id=id_seller).update(sell=bitcoin_rimasti_seller)
-                            Trans.objects.create(
-                                creator=trans_seller.creator,
-                                ended=True,
-                                good=True,
-                                total_dollars_sell=tmp_one_bit_dollars * quantity,
-                                winner=trans_buyer.creator,
-                                price_1B_sell=tmp_one_bit_dollars,
-                                quantity_B_sell=quantity,
-                                sell=0, sell_in=quantity)
+                            if tmp_price_1b > trans_seller_tmp.price_1B_in > tmp_price_1b_seller:  # buono
+                                trans_seller = trans_seller_tmp
+                                tmp_price_1b_seller = trans_seller.price_1B_in
+                                seller = trans_seller.creator
+                                id_seller = trans_seller._id
 
-                        # BUYER
-                        if bitcoin_rimasti_buyer <= 0:
-                            Trans.objects.filter(_id=trans_buyer.id_buyer).update(
-                                ended=True,
-                                total_dollars_sell=tmp_one_bit_dollars * quantity,
-                                winner=trans_seller.creator,
-                                price_1B_sell=tmp_one_bit_dollars,
-                                quantity_B_sell=quantity,
-                                buy=0)
-                        elif bitcoin_rimasti_buyer > 0:  # partial
-                            Trans.objects.filter(_id=trans_buyer.id_buyer).update(buy=bitcoin_rimasti_buyer)
-                            Trans.objects.create(
-                                creator=trans_buyer.creator,
-                                good=True,
-                                ended=True,
-                                total_dollars_sell=tmp_one_bit_dollars * quantity,
-                                winner=trans_seller.creator,
-                                price_1B_sell=tmp_one_bit_dollars,
-                                quantity_B_sell=quantity,
-                                buy=0, buy_in=quantity)
+                                if trans_seller.sell >= trans_buyer.buy:  # match completo
+                                    quantity = trans_buyer.buy
+                                else:  # match parziale
+                                    quantity = trans_seller.sell
 
-                        Wallet.objects.filter(username=trans_buyer.creator).update(
-                            dollars=Wallet.objects.get(
-                                username=trans_buyer.creator).dollars - tmp_one_bit_dollars * quantity,
-                            bitcoin=Wallet.objects.get(username=trans_buyer.creator).bitcoin + quantity)
+                        if seller != "":  # cerco se ho trovato il SELLER
+                            trans_buyer.winner = seller
+                            trans_buyer.price_1B_end = tmp_price_1b
+                            trans_buyer.total_B_exchanged = quantity
+                            bitcoin_rimasti_seller = trans_seller.sell - quantity
+                            bitcoin_rimasti_buyer = trans_buyer.buy - quantity
 
-                        Wallet.objects.filter(username=trans_seller.creator).update(
-                            dollars=Wallet.objects.get(
-                                username=trans_seller.creator).dollars + tmp_one_bit_dollars * quantity,
-                            bitcoin=Wallet.objects.get(username=trans_seller.creator).bitcoin - quantity)
-                        messages.add_message(request, messages.INFO, 'Scambio avvenuto correttamente.')
+                            # SELLER
+                            if bitcoin_rimasti_seller == 0:  # complete seller
+                                Trans.objects.filter(_id=id_seller).update(
+                                    ended=True,
+                                    total_price=round(tmp_price_1b * quantity, 2),
+                                    winner=trans_buyer.creator,
+                                    price_1B_end=round(tmp_price_1b, 2),
+                                    total_B_exchanged=round(quantity, 2),
+                                    sell=0.0)
+
+                            elif bitcoin_rimasti_seller > 0:  # partial
+                                Trans.objects.filter(_id=id_seller).update(sell=bitcoin_rimasti_seller)
+                                Trans.objects.create(
+                                    creator=trans_seller.creator,
+                                    ended=True,
+                                    good=True,
+                                    total_price=round(tmp_price_1b * quantity, 2),
+                                    winner=trans_buyer.creator,
+                                    price_1B_end=round(tmp_price_1b, 2),
+                                    total_B_exchanged=round(quantity, 2),
+                                    sell=0.0, sell_in=round(quantity, 2))
+
+                            # BUYER
+                            if bitcoin_rimasti_buyer == 0:
+                                Trans.objects.filter(_id=trans_buyer.id_buyer).update(
+                                    ended=True,
+                                    total_price=round(tmp_price_1b * quantity, 2),
+                                    winner=trans_seller.creator,
+                                    price_1B_end=round(tmp_price_1b, 2),
+                                    total_B_exchanged=round(quantity, 2),
+                                    buy=0.0)
+
+                            elif bitcoin_rimasti_buyer > 0:  # partial
+                                Trans.objects.filter(_id=trans_buyer.id_buyer).update(buy=bitcoin_rimasti_buyer)
+                                Trans.objects.create(
+                                    creator=trans_buyer.creator,
+                                    good=True,
+                                    ended=True,
+                                    total_price=round(tmp_price_1b * quantity, 2),
+                                    winner=trans_seller.creator,
+                                    price_1B_end=round(tmp_price_1b, 2),
+                                    total_B_exchanged=round(quantity, 2),
+                                    buy=0, buy_in=round(quantity, 2))
+
+                            #aggiorno i Wallet
+                            Wallet.objects.filter(username=trans_buyer.creator).update(
+                                dollars=round(Wallet.objects.get(
+                                    username=trans_buyer.creator).dollars - tmp_price_1b * quantity, 2),
+                                bitcoin=round(Wallet.objects.get(username=trans_buyer.creator).bitcoin + quantity, 2))
+
+                            Wallet.objects.filter(username=trans_seller.creator).update(
+                                dollars=round(Wallet.objects.get(
+                                    username=trans_seller.creator).dollars + tmp_price_1b * quantity, 2),
+                                bitcoin=round(Wallet.objects.get(username=trans_seller.creator).bitcoin - quantity, 2))
+                            messages.add_message(request, messages.INFO, 'Scambio avvenuto correttamente.')
+                            return redirect('transaction_list')
+                        else:
+                            messages.add_message(request, messages.INFO, 'Transazione salvata.')
+                            return redirect('transaction_list')
+
+                    else:  # if he hasn't enaugh dollars
+                        messages.add_message(request, messages.INFO, 'Devi inserire un prezzo positivo e che puoi sostenere.')
                         return redirect('transaction_list')
-                    else:
-                        messages.add_message(request, messages.INFO, 'Transazione salvata.')
-                        return redirect('transaction_list')
-
-                else:  # if he hasn't enaugh dollars
+                else:
                     messages.add_message(request, messages.INFO, 'Non hai abbastanza dollari.')
                     return redirect('transaction_list')
             except Wallet.DoesNotExist:
@@ -201,10 +222,12 @@ def buy_new(request):
             dol_user = Wallet.objects.get(username=request.user.username).dollars
             wallet_user = True
         except Wallet.DoesNotExist:
-            wallet_user = False
+            messages.add_message(request, messages.INFO,
+                                 'Il tuo wallet non esiste ancora, l\'ho appena creato per te')
+            return redirect('wallet')
         form = Buy()
-    return render(request, 'app/buy_edit.html', {'trans': form, 'bit_user': bit_user,
-                                                  'dol_user': dol_user, 'wallet': wallet_user})
+    return render(request, 'app/buy_edit.html', {'trans': form, 'bit_user': bit_user, 'dol_user': dol_user,
+                                                 'wallet': wallet_user})
 
 
 @login_required
@@ -221,103 +244,137 @@ def sell_new(request):
             try:
                 trans_sell.bitcoin = Wallet.objects.get(username=trans_sell.creator).bitcoin
                 trans_sell.dollars = Wallet.objects.get(username=trans_sell.creator).dollars
-                trans_sell.dollars_trans = trans_sell.one_B_dollar * trans_sell.sell  # is a check for the positivity of values
-                if trans_sell.dollars_trans > 0 and trans_sell.sell <= trans_sell.bitcoin:
-                    # if the transition in good
-                    Trans.objects.create(creator=trans_sell.creator, published_date=timezone.now(), good=True,
-                                         buy=trans_sell.buy, sell=trans_sell.sell, buy_in=trans_sell.buy_in,
-                                         sell_in=trans_sell.sell_in, one_B_dollar=trans_sell.one_B_dollar)
 
-                    trans_sell.id_sell = Trans.objects.latest('published_date')._id
+                # serve per capire se i valori sono +
+                trans_sell.dollars_trans = trans_sell.price_1B_in * trans_sell.sell
 
-                    tmp_one_bit_dollars = trans_sell.one_B_dollar  # value of 1 bitcoin SELLER
-                    quantity = 0  # bitcoin exchanged
-                    buyer = ""  # tmp winner BUYER
-                    id_buyer = 0  # buyer
+                total_trans_sell = Trans.objects.all().filter(ended=False, good=True, buy=0, creator=trans_sell.creator)
 
-                    total_trans = Trans.objects.all().filter(ended=False, good=True, sell=0).exclude(
-                        creator=trans_sell.creator)
-                    for k in total_trans:  # for each transaction we look for the BUYER
-                        trans_buyer_tmp = Trans.objects.get(_id=k._id)
-                        # OK
-                        if trans_buyer_tmp.one_B_dollar >= tmp_one_bit_dollars:  # a good buyer
-                            trans_buyer = trans_buyer_tmp
-                            tmp_one_bit_dollars = trans_buyer.one_B_dollar  # value of 1 bitcoin
-                            buyer = trans_buyer.creator
-                            id_buyer = trans_buyer._id
-                            if trans_buyer.buy >= trans_sell.sell:  # match completo
-                                quantity = trans_sell.sell
-                            else:  # match parziale
-                                quantity = trans_buyer.buy
+                #  cerco se il SELLER ha abbastanza Bitcoin
+                bitcoin_totali_in_vendita = trans_sell.sell
+                for i in total_trans_sell:
+                    bitcoin_totali_in_vendita += Trans.objects.get(_id=i._id).sell
 
-                    if buyer != "":  # if there is a buyer
+                # se ho abbastanza B
+                if bitcoin_totali_in_vendita <= trans_sell.bitcoin:
+                    if trans_sell.dollars_trans > 0:    # se ha messo dollari positivi
 
-                        trans_sell.winner = buyer  # name of the buyer
-                        trans_sell.price_1B_sell = tmp_one_bit_dollars  # price of 1 bitcoin exchanged
-                        trans_sell.quantity_B_sell = quantity  # quantity of B exchanged
-                        bitcoin_rimasti_buyer = trans_buyer.buy - quantity  # for the transaction
-                        bitcoin_rimasti_seller = trans_sell.sell - quantity  # seller
+                        # if the transition in good
+                        Trans.objects.create(creator=trans_sell.creator, published_date=timezone.now(), good=True,
+                                             buy=round(trans_sell.buy, 2), sell=round(trans_sell.sell, 2),
+                                             buy_in=round(trans_sell.buy_in, 2),
+                                             sell_in=round(trans_sell.sell_in, 2),
+                                             price_1B_in=round(trans_sell.price_1B_in, 2))
 
-                        # BUYER
-                        if bitcoin_rimasti_buyer <= 0:  # buyer complete the transaction
-                            Trans.objects.filter(_id=id_buyer).update(ended=True,
-                                                                      total_dollars_sell=tmp_one_bit_dollars * quantity,
-                                                                      winner=trans_sell.creator,
-                                                                      price_1B_sell=tmp_one_bit_dollars,
-                                                                      quantity_B_sell=quantity, buy=0)
+                        trans_sell.id_sell = Trans.objects.latest('published_date')._id
 
-                        elif bitcoin_rimasti_buyer > 0:  # partial
-                            Trans.objects.filter(_id=id_buyer).update(buy=bitcoin_rimasti_buyer)
-                            Trans.objects.create(
-                                ended=True,
-                                good=True,
-                                creator=trans_buyer.creator,
-                                winner=trans_sell.creator,
-                                price_1B_sell=tmp_one_bit_dollars,
-                                quantity_B_sell=quantity,
-                                buy=0,
-                                total_dollars_sell=tmp_one_bit_dollars * quantity,
-                                buy_in=quantity)
-                        # SELLER
-                        if bitcoin_rimasti_seller <= 0:
-                            Trans.objects.filter(_id=trans_sell.id_sell).update(
-                                ended=True,
-                                winner=trans_buyer.creator,
-                                price_1B_sell=tmp_one_bit_dollars,
-                                quantity_B_sell=quantity,
-                                total_dollars_sell=tmp_one_bit_dollars * quantity,
-                                sell=0)
-                        elif bitcoin_rimasti_seller > 0:  # partial
-                            Trans.objects.filter(_id=trans_sell.id_sell).update(sell=bitcoin_rimasti_seller)
-                            Trans.objects.create(
-                                ended=True,
-                                good=True,
-                                total_dollars_sell=tmp_one_bit_dollars * quantity,
-                                creator=trans_sell.creator,
-                                winner=trans_buyer.creator,
-                                price_1B_sell=tmp_one_bit_dollars,
-                                quantity_B_sell=quantity,
-                                sell=0, sell_in=quantity)
-                        # update the wallet
-                        Wallet.objects.filter(username=trans_sell.creator).update(
-                            dollars=Wallet.objects.get(
-                                username=trans_sell.creator).dollars + tmp_one_bit_dollars * quantity,
-                            bitcoin=Wallet.objects.get(username=trans_sell.creator).bitcoin - quantity
-                        )
+                        tmp_price_1b = trans_sell.price_1B_in  # value of 1 bitcoin SELLER
+                        quantity = 0  # bitcoin exchanged
+                        buyer = ""  # tmp winner BUYER
+                        id_buyer = 0  # buyer
 
-                        Wallet.objects.filter(username=buyer).update(
-                            dollars=Wallet.objects.get(
-                                username=trans_buyer.creator).dollars - tmp_one_bit_dollars * quantity,
-                            bitcoin=Wallet.objects.get(username=trans_buyer.creator).bitcoin + quantity)
-                        messages.add_message(request, messages.INFO, 'Scambio avvenuto')
-                        return redirect('transaction_list')
+                        #cerco le transazioni non self
+                        total_trans = Trans.objects.all().filter(ended=False, good=True, sell=0).exclude(
+                           creator=trans_sell.creator)
+
+                        #   ovviamente non considero la possibilità che il venditore e il compratore siano la stessa
+                        #   persona, non avrebbe senso
+
+                        # cerco il BUYER
+                        for k in total_trans:
+                            trans_buyer_tmp = Trans.objects.get(_id=k._id)
+
+                            # se ho abbastanza Bitcoin
+                            if trans_buyer_tmp.price_1B_in > tmp_price_1b:  # a good buyer
+                                trans_buyer = trans_buyer_tmp
+                                tmp_price_1b = trans_buyer.price_1B_in  # prezzo di 1B temporaneo
+                                buyer = trans_buyer.creator
+                                id_buyer = trans_buyer._id
+
+                                #valuto la quantità da scambiare
+                                if trans_buyer.buy >= trans_sell.sell:  # match completo
+                                    quantity = trans_sell.sell
+                                else:  # match parziale
+                                    quantity = trans_buyer.buy
+
+                        if buyer != "":  # se c'è il BUYER
+
+                            trans_sell.winner = buyer  # nome del BUYER
+                            trans_sell.price_1B_end = tmp_price_1b  # prezzo di 1B
+                            trans_sell.total_B_exchanged = quantity  # quantità di B scambiati
+                            bitcoin_rimasti_buyer = trans_buyer.buy - quantity
+                            bitcoin_rimasti_seller = trans_sell.sell - quantity
+
+                            # BUYER
+                            if bitcoin_rimasti_buyer == 0:  # buyer completa la transazione
+                                Trans.objects.filter(_id=id_buyer).update(ended=True,
+                                                                          total_price=round(tmp_price_1b * quantity, 2),
+                                                                          winner=trans_sell.creator,
+                                                                          price_1B_end=round(tmp_price_1b, 2),
+                                                                          total_B_exchanged=round(quantity, 2), buy=0.0)
+
+                            elif bitcoin_rimasti_buyer > 0:  # partial
+                                Trans.objects.filter(_id=id_buyer).update(buy=bitcoin_rimasti_buyer)
+                                Trans.objects.create(
+                                    ended=True,
+                                    good=True,
+                                    creator=trans_buyer.creator,
+                                    winner=trans_sell.creator,
+                                    price_1B_end=round(tmp_price_1b, 2),
+                                    total_B_exchanged=round(quantity, 2),
+                                    buy=0.0,
+                                    total_price=round(tmp_price_1b * quantity, 2),
+                                    buy_in=round(quantity, 2))
+                            # SELLER
+                            if bitcoin_rimasti_seller == 0:  #venditore completa la transazione
+                                Trans.objects.filter(_id=trans_sell.id_sell).update(
+                                    ended=True,
+                                    winner=trans_buyer.creator,
+                                    price_1B_end=round(tmp_price_1b, 2),
+                                    total_B_exchanged=round(quantity, 2),
+                                    total_price=round(tmp_price_1b * quantity, 2),
+                                    sell=0.0)
+                            elif bitcoin_rimasti_seller > 0:  # partial
+                                Trans.objects.filter(_id=trans_sell.id_sell).update(sell=bitcoin_rimasti_seller)
+                                Trans.objects.create(
+                                    ended=True,
+                                    good=True,
+                                    total_price=round(tmp_price_1b * quantity, 2),
+                                    creator=trans_sell.creator,
+                                    winner=trans_buyer.creator,
+                                    price_1B_end=round(tmp_price_1b, 2),
+                                    total_B_exchanged=round(quantity, 2),
+                                    sell=0.0, sell_in=round(quantity, 2))
+                            # aggiorna il wallet
+                            Wallet.objects.filter(username=trans_sell.creator).update(
+                                dollars=round(Wallet.objects.get(username=trans_sell.creator).dollars +
+                                              tmp_price_1b * quantity, 2),
+
+                                bitcoin=round(Wallet.objects.get(username=trans_sell.creator).bitcoin - quantity, 2),
+                            )
+
+                            Wallet.objects.filter(username=buyer).update(
+                                dollars=round(Wallet.objects.get(
+                                    username=trans_buyer.creator).dollars - tmp_price_1b * quantity, 2),
+
+                                bitcoin=round(Wallet.objects.get(username=trans_buyer.creator).bitcoin + quantity, 2))
+
+                            messages.add_message(request, messages.INFO, 'Scambio avvenuto')
+                            return redirect('transaction_list')
+                        else:
+                            messages.add_message(request, messages.INFO, 'Transazione salvata.')
+                            return redirect('transaction_list')
+
+                    # se non ha scritto dollari positivi
                     else:
-                        messages.add_message(request, messages.INFO, 'Transazione salvata.')
+                        messages.add_message(request, messages.INFO, 'Errore: Inserisci il prezzo positivo.')
                         return redirect('transaction_list')
 
-                else:  # if he hasn't enaugh bitcoin
+                # se non ha abbastanza Bitcoin
+                else:
                     messages.add_message(request, messages.INFO, 'Non hai abbastanza Bitcoin.')
                     return redirect('transaction_list')
+
             except Wallet.DoesNotExist:
                 messages.add_message(request, messages.INFO,
                                      'Il tuo wallet non esiste ancora, l\'ho appena creato per te')
@@ -328,10 +385,14 @@ def sell_new(request):
             dol_user = Wallet.objects.get(username=request.user.username).dollars
             wallet_user = True
         except Wallet.DoesNotExist:
-            wallet_user = False
+            messages.add_message(request, messages.INFO,
+                                 'Il tuo wallet non esiste ancora, l\'ho appena creato per te')
+            return redirect('wallet')
+
         form = Sell()
-    return render(request, 'app/sell_edit.html', {'trans': form, 'bit_user': bit_user,
-                                                  'dol_user': dol_user, 'wallet': wallet_user})
+    return render(request, 'app/sell_edit.html', {'trans': form, 'bit_user': bit_user,'dol_user': dol_user,
+                                                  'wallet': wallet_user})
+
 
 @login_required
 def transaction_detail(request, pk):
@@ -343,11 +404,12 @@ def transaction_detail(request, pk):
         return render(request, 'app/transaction_detail.html', {'trans': trans})
 
 
-def transaction_list(request):  # this is public list of all transactions
+#   lista pubblica di tutte le transazioni
+def transaction_list(request):
     transs = Trans.objects.filter(published_date__lte=timezone.now(), good=True).order_by('published_date')
     try:
-        transs.bit_user = Wallet.objects.get(username=request.user.username).bitcoin
-        transs.dol_user = Wallet.objects.get(username=request.user.username).dollars
+        transs.bit_user = round(Wallet.objects.get(username=request.user.username).bitcoin, 2)
+        transs.dol_user = round(Wallet.objects.get(username=request.user.username).dollars, 2)
         transs.wallet = True
         return render(request, 'app/transaction_list.html', {'transs': transs})
     except Wallet.DoesNotExist:
@@ -356,11 +418,11 @@ def transaction_list(request):  # this is public list of all transactions
 
 
 @login_required
-def transaction_active_list(request):  # this is public list of active transactions
+def transaction_active_list(request):  # lista pubblica delle transazioni attive
     transs = Trans.objects.filter(published_date__lte=timezone.now(), ended=False, good=True).order_by('published_date')
     try:
-        transs.bit_user = Wallet.objects.get(username=request.user.username).bitcoin
-        transs.dol_user = Wallet.objects.get(username=request.user.username).dollars
+        transs.bit_user = round(Wallet.objects.get(username=request.user.username).bitcoin, 2)
+        transs.dol_user = round(Wallet.objects.get(username=request.user.username).dollars, 2)
         transs.wallet = True
         return render(request, 'app/transaction_active_list.html', {'transs': transs})
     except Wallet.DoesNotExist:
@@ -369,20 +431,22 @@ def transaction_active_list(request):  # this is public list of active transacti
 
 
 @login_required
-def earn_lose(request):
+def earn_lose(request):    # bilancio
     try:
         transs = Trans.objects.filter(
             Q(creator=request.user.username, published_date__lte=timezone.now(), ended=True)
             | Q(winner=request.user.username, published_date__lte=timezone.now(), ended=True)
-        ).order_by('published_date')  # sell
+        ).order_by('published_date')  # cerco se l'user è creator o winner
 
-        transs.bit_in = Wallet.objects.get(username=request.user.username).bitcoin_init
-        transs.dol_in = Wallet.objects.get(username=request.user.username).dollars_init
-        transs.bit_fin = Wallet.objects.get(username=request.user.username).bitcoin
-        transs.dol_fin = Wallet.objects.get(username=request.user.username).dollars
-        transs.dol_diff = transs.dol_fin - transs.dol_in
-        transs.bit_diff = transs.bit_fin - transs.bit_in
+        transs.bit_in = round(Wallet.objects.get(username=request.user.username).bitcoin_init, 2)
+        transs.dol_in = round(Wallet.objects.get(username=request.user.username).dollars_init, 2)
+        transs.bit_fin = round(Wallet.objects.get(username=request.user.username).bitcoin, 2)
+        transs.dol_fin = round(Wallet.objects.get(username=request.user.username).dollars, 2)
+        transs.dol_diff = round(transs.dol_fin - transs.dol_in, 2)
+        transs.bit_diff = round(transs.bit_fin - transs.bit_in, 2)
+
         return render(request, 'app/earn_lose.html', {'transs': transs})
+
     except Wallet.DoesNotExist:
         messages.add_message(request, messages.INFO,
                              'Non hai un Wallet, e quindi non puoi avere un bilancio. Ora te lo creo io!')
@@ -390,9 +454,9 @@ def earn_lose(request):
 
 
 @login_required
-def transaction_remove(request, pk):
+def transaction_remove(request, pk):   # rimuove la transazione
     trans = get_object_or_404(Trans, pk=pk)
-    if trans.creator == request.user.username:  # only the creator can conclude the transaction
+    if trans.creator == request.user.username:  # solo il creatore può farlo
         messages.add_message(request, messages.INFO, 'Transazione cancellata.')
         trans.delete()
     else:
@@ -400,10 +464,11 @@ def transaction_remove(request, pk):
     return redirect('transaction_list')
 
 
+@login_required
 def transaction_new(request):
     try:
-        bit_user = Wallet.objects.get(username=request.user.username).bitcoin
-        dol_user = Wallet.objects.get(username=request.user.username).dollars
+        bit_user = round(Wallet.objects.get(username=request.user.username).bitcoin, 2)
+        dol_user = round(Wallet.objects.get(username=request.user.username).dollars, 2)
         wallet_user = True
         return render(request, 'app/transaction_new.html',
                       {'bit_user': bit_user, 'dol_user': dol_user, 'wallet': wallet_user})

@@ -3,9 +3,9 @@
 {% block content %}
     {% if transs.wallet %}
         <div class="box">
-            <h4>Wallet</h4>
-            <p>Bitcoin: {{ transs.bit_user }} B</p>
-            <p>Dollars: {{ transs.dol_user }} $</p>
+            <h4><center><font color="black">Wallet</font></center></h4>
+            <p><font color="black">Bitcoin:</font> <font color="blue">{{ transs.bit_user }} B</font></p>
+            <p><font color="black">Dollari:</font> <font color="blue">{{ transs.dol_user }} $</font></p>
         </div>
     {% endif %}
     <a href="{% url 'transaction_new' %}">
@@ -19,9 +19,9 @@
                 {{ trans.published_date }}
             </time>
             {% if trans.sell > 0 %}
-                <h2><a href="{% url 'transaction_detail' pk=trans.pk %}"><font color="green">Vendita di {{ trans.sell }} B a {{ trans.one_B_dollar }} $</font></a></h2>
+                <h2><a href="{% url 'transaction_detail' pk=trans.pk %}"><font color="green">Vendita di {{ trans.sell }} B a {{ trans.price_1B_in }} $</font></a></h2>
             {% elif trans.buy > 0 %}
-                <h2><a href="{% url 'transaction_detail' pk=trans.pk %}"><font color="blue">Acquisto di {{ trans.buy }} B a {{ trans.one_B_dollar }} $</font></a></h2>
+                <h2><a href="{% url 'transaction_detail' pk=trans.pk %}"><font color="blue">Acquisto di {{ trans.buy }} B a {{ trans.price_1B_in }} $</font></a></h2>
             {% endif %}
         </article>
     {% endfor %}

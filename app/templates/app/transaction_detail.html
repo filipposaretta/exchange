@@ -3,9 +3,9 @@
 {% block content %}
     {% if trans.wallet %}
         <div class="box">
-            <h4>Wallet</h4>
-            <p>Bitcoin: {{ trans.bit_user }} B</p>
-            <p>Dollars: {{ trans.dol_user }} $</p>
+            <h4><center><font color="black">Wallet</font></center></h4>
+            <p><font color="black">Bitcoin:</font> <font color="blue">{{ trans.bit_user }} B</font></p>
+            <p><font color="black">Dollari:</font> <font color="blue">{{ trans.dol_user }} $</font></p>
         </div>
     {% endif %}
     <div class="row">
@@ -22,11 +22,11 @@
             {% if trans.ended %}
                 <p><font color="#4169E1">Username: </font>{{ trans.creator }}</p>
 
-                <p><font color="#4169E1">Valore di 1 Bitcoin: </font>{{ trans.one_B_dollar }} $</p>
+                <p><font color="#4169E1">Valore di 1 Bitcoin: </font>{{ trans.price_1B_in }} $</p>
 
                 <p><font color="red">Il match è con: </font>{{ trans.winner }}</p>
-                <p><font color="red">1 Bitcoin è stato venduto a: </font>{{ trans.price_1B_sell }} $</p>
-                <p><font color="red">Quantità di Bitcoin scambiati: </font>{{ trans.quantity_B_sell }} $</p>
+                <p><font color="red">1 Bitcoin è stato venduto a: </font>{{ trans.price_1B_end }} $</p>
+                <p><font color="red">Quantità di Bitcoin scambiati: </font>{{ trans.total_B_exchanged }} $</p>
                 <p><font color="#4169E1">La transazione è conclusa</font></p>
 
             {% else %}
@@ -38,7 +38,7 @@
                     <p><font color="#4169E1">Bitcoin in vendita: </font>{{ trans.sell }}</p>
                 {% endif %}
 
-                <p><font color="#4169E1">Valore di 1 Bitcoin: </font>{{ trans.one_B_dollar }} $</p>
+                <p><font color="#4169E1">Valore di 1 Bitcoin: </font>{{ trans.price_1B_in }} $</p>
 
                 <p><font color="#4169E1">La transazione non è conclusa</font></p>
             {% endif %}

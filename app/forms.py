@@ -1,22 +1,24 @@
 from django import forms
 from .models import Trans
 
-class Buy(forms.ModelForm):
+
+class Buy(forms.ModelForm):  # acquisto
 
     class Meta:
         model = Trans
-        fields = ('buy','one_B_dollar',)
+        fields = ('buy','price_1B_in',)
         labels = {
             'buy': 'Inserisci il numero di  Bitcoin che vuoi acquistare',
-            'one_B_dollar': 'Inserisci il prezzo di 1 Bitcoin'
+            'price_1B_in': 'Inserisci il prezzo di 1 Bitcoin'
         }
 
-class Sell(forms.ModelForm):
+
+class Sell(forms.ModelForm): # vendita
 
     class Meta:
         model = Trans
-        fields = ('sell','one_B_dollar',)
+        fields = ('sell','price_1B_in',)
         labels = {
             'sell': 'Inserisci il numero di  Bitcoin che vuoi vendere',
-            'one_B_dollar': 'Inserisci il prezzo di 1 Bitcoin'
+            'price_1B_in': 'Inserisci il prezzo di 1 Bitcoin'
         }

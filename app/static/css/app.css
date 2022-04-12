@@ -84,9 +84,9 @@ h4 {
 .box {
     background-color: #FFFFFF;
     color: #4169E1;
-    height: 130px;
-    width: 280px;
-    padding: 5px;
+    height: 140px;
+    width: 250px;
+    padding: 15px;
     border: solid 3px black;
     margin: -150px;
     position: absolute;
