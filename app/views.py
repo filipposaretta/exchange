@@ -108,6 +108,11 @@ def buy_new(request):   # nuovo acquisto
 
                 if dollari_totali_in_acquisto <= dollars_buyer:
                     if 0 < trans_buyer.dollars_trans < dollars_buyer:  # se è buona
+
+                        for t in Trans.objects.all().filter(price_1B_in__lte = trans_buyer.price_1B_in, creator = trans_buyer.creator, sell__gt = 0, good=True, ended = False):
+                            messages.add_message(request, messages.INFO, 'Il wash trading non è permesso.')
+                            return redirect('transaction_list')
+
                         Trans.objects.create(creator=trans_buyer.creator, published_date=timezone.now(), good=True,
                                              buy=round(trans_buyer.buy, 2), sell=0.0, buy_in=round(trans_buyer.buy_in, 2), sell_in=0.0,
                                              price_1B_in=round(trans_buyer.price_1B_in, 2))
@@ -258,6 +263,10 @@ def sell_new(request):
                 # se ho abbastanza B
                 if bitcoin_totali_in_vendita <= trans_sell.bitcoin:
                     if trans_sell.dollars_trans > 0:    # se ha messo dollari positivi
+
+                        for t in Trans.objects.all().filter(price_1B_in__gte = trans_sell.price_1B_in, creator = trans_sell.creator, sell__gt = 0, good = True, ended = False):
+                            messages.add_message(request, messages.INFO, 'Il wash trading non è permesso.')
+                            return redirect('transaction_list')
 
                         # if the transition in good
                         Trans.objects.create(creator=trans_sell.creator, published_date=timezone.now(), good=True,
